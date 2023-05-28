@@ -68,8 +68,9 @@ protected:
 
 	void CheckProduct();
 
+	UFUNCTION()
 	void StartRealBuyProcess();
-
+	
 private:
 
 	void OpenPurchaseWidget();

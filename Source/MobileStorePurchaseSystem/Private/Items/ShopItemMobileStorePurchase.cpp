@@ -37,8 +37,7 @@ void UShopItemMobileStorePurchase::Buy_Implementation()
 {
 	OpenPurchaseWidget();
 
-	FTimerHandle RealPurchaseTimer;
-	GetWorld()->GetTimerManager().SetTimer(RealPurchaseTimer, this, &UShopItemMobileStorePurchase::StartRealBuyProcess, 1.f);
+	StartRealBuyProcess();
 }
 
 void UShopItemMobileStorePurchase::Finish_Implementation()
