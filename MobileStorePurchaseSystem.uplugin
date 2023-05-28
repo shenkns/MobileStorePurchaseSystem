@@ -17,5 +17,31 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
+	],
+	"Plugins": [
+		{
+			"Name": "LogSystem",
+			"Enabled": true
+		},
+		{
+			"Name": "ManagersSystem",
+			"Enabled": true
+		},
+		{
+			"Name": "ShopSystem",
+			"Enabled": true
+		},
+		{
+			"Name": "DataSystem",
+			"Enabled": true
+		},
+		{
+			"Name": "SerializationSystem",
+			"Enabled": true
+		},
+		{
+			"Name": "OnlineSubsystem",
+			"Enabled": true
+		}
 	]
 }

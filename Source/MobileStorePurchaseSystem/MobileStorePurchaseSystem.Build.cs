@@ -25,7 +25,26 @@ public class MobileStorePurchaseSystem : ModuleRules
 			new string[]
 			{
 				"CoreUObject",
-				"Engine"
+				"Engine",
+				"LogSystem",
+				"DataSystem",
+				"ManagersSystem",
+				"ShopSystem",
+				"SerializationSystem",
+				"OnlineSubsystem",
+				"Json"
+			}
+		);
+		
+		PrivateIncludePathModuleNames.AddRange(
+			new string[]
+			{
+				"LogSystem",
+				"DataSystem",
+				"ManagersSystem",
+				"ShopSystem",
+				"SerializationSystem",
+				"OnlineSubsystem"
 			}
 		);
 	}
