@@ -4,11 +4,13 @@
 
 #include "LogSystem.h"
 #include "ManagersSystem.h"
+#include "Blueprint/UserWidget.h"
 #include "Data/MobileStorePurchaseShopItemData.h"
 #include "Data/ShopItemData.h"
 #include "Managers/ShopManager.h"
 #include "Module/MobileStorePurchaseSystemModule.h"
 #include "Module/MobileStorePurchaseSystemSettings.h"
+#include "Widgets/PurchaseWidget.h"
 
 void UShopItemMobileStorePurchase::Init_Implementation()
 {
@@ -33,38 +35,17 @@ void UShopItemMobileStorePurchase::Init_Implementation()
 
 void UShopItemMobileStorePurchase::Buy_Implementation()
 {
-	if (ShopData && Cast<UMobileStorePurchaseShopItemData>(ShopData))
-	{
-		UE_LOG(LogTemp, Log, TEXT("SKU %s: Buy"), *ShopData->GetName());
+	OpenPurchaseWidget();
 
-#if WITH_EDITOR
-		FinishPurchase(true);
-#else
-#if UE_BUILD_DEVELOPMENT
-		if(const UMetaManagerSettings* Settings = GetDefault<UMetaManagerSettings>())
-		{
-			if(Settings->FakeInAppPurchasesInDevBuild)
-			{
-				FinishSKUPurchase(FSKUResult(true));
-				return;
-			}
-		}
-#endif
-		if(IsStoreInfoReady())
-		{
-			ShopController->GetPlatformPurchaseManager()->OnPurchaseComplete.AddDynamic(this, &UMetaShopMobilePurchaseSKU::ProcessPurchaseComplete);
-			ShopController->GetPlatformPurchaseManager()->StartPurchase(GetProductID(), ShopData->IsConsumable);
-		}
-		else
-		{
-			FinishSKUPurchase(FSKUResult(false, "Unavailable"));
-		}
-#endif
-	}
-	else
-	{
-		Super::Buy_Implementation();
-	}
+	FTimerHandle RealPurchaseTimer;
+	GetWorld()->GetTimerManager().SetTimer(RealPurchaseTimer, this, &UShopItemMobileStorePurchase::StartRealBuyProcess, 1.f);
+}
+
+void UShopItemMobileStorePurchase::Finish_Implementation()
+{
+	Super::Finish_Implementation();
+
+	ClosePurchaseWidget();
 }
 
 int UShopItemMobileStorePurchase::GetPrice_Implementation() const
@@ -186,4 +167,55 @@ void UShopItemMobileStorePurchase::CheckProduct()
 		);
 	}
 	
+}
+
+void UShopItemMobileStorePurchase::OpenPurchaseWidget()
+{
+	PurchaseWidget = CreateWidget<UPurchaseWidget>(GetWorld(), GetDefault<UMobileStorePurchaseSystemSettings>()->PurchaseWidgetClass);
+	PurchaseWidget->Show();
+}
+
+void UShopItemMobileStorePurchase::ClosePurchaseWidget()
+{
+	if(PurchaseWidget)
+	{
+		PurchaseWidget->Hide();
+	}
+}
+
+void UShopItemMobileStorePurchase::StartRealBuyProcess()
+{
+	if (ShopData && Cast<UMobileStorePurchaseShopItemData>(ShopData))
+	{
+		UE_LOG(LogTemp, Log, TEXT("SKU %s: Buy"), *ShopData->GetName());
+
+#if WITH_EDITOR
+		FinishPurchase(true);
+#else
+#if UE_BUILD_DEVELOPMENT
+		if(const UMobileStorePurchaseSystemSettings* Settings = GetDefault<UMobileStorePurchaseSystemSettings>())
+		{
+			if(Settings->bFakeInAppPurchasesInDevBuild)
+			{
+				FinishPurchase(true);
+				
+				return;
+			}
+		}
+#endif
+		if(IsStoreInfoReady())
+		{
+			GetMobileStorePurchaseManager()->OnPurchaseComplete.AddDynamic(this, &UMetaShopMobilePurchaseSKU::ProcessPurchaseComplete);
+			GetMobileStorePurchaseManager()->StartPurchase(GetProductID(), ShopData->IsConsumable);
+		}
+		else
+		{
+			FinishPurchase(false);
+		}
+#endif
+	}
+	else
+	{
+		Super::Buy_Implementation();
+	}
 }

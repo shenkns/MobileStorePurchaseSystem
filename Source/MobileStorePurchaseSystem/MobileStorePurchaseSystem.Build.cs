@@ -32,7 +32,8 @@ public class MobileStorePurchaseSystem : ModuleRules
 				"ShopSystem",
 				"SerializationSystem",
 				"OnlineSubsystem",
-				"Json"
+				"Json",
+				"UMG"
 			}
 		);
 		

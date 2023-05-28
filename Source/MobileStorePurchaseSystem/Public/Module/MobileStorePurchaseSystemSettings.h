@@ -3,6 +3,7 @@
 #pragma once
 
 #include "UObject/Object.h"
+#include "Widgets/PurchaseWidget.h"
 
 #include "MobileStorePurchaseSystemSettings.generated.h"
 
@@ -24,4 +25,10 @@ public:
 	// Debug
 	UPROPERTY(EditDefaultsOnly, Config, Category = "Debug")
 	bool bShowDebugMessages = false;
+
+	UPROPERTY(EditDefaultsOnly, Config, Category = "Debug")
+	TSubclassOf<UPurchaseWidget> PurchaseWidgetClass = UPurchaseWidget::StaticClass();
+
+	UPROPERTY(EditDefaultsOnly, Config, Category = "Debug")
+	bool bFakeInAppPurchasesInDevBuild = false;
 };

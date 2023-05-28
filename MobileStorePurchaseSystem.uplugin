@@ -7,7 +7,7 @@
 	"Category": "Meta",
 	"CreatedBy": "shenkns",
 	"EngineVersion": "5.1.0",
-	"CanContainContent": false,
+	"CanContainContent": true,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,

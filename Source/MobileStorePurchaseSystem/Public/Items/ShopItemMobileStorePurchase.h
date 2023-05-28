@@ -11,6 +11,7 @@
 #include "ShopItemMobileStorePurchase.generated.h"
 
 struct FOnlineError;
+class UPurchaseWidget;
 
 UCLASS()
 class MOBILESTOREPURCHASESYSTEM_API UShopItemMobileStorePurchase : public UShopItem
@@ -18,6 +19,9 @@ class MOBILESTOREPURCHASESYSTEM_API UShopItemMobileStorePurchase : public UShopI
 	GENERATED_BODY()
 	
 protected:
+
+	UPROPERTY(BlueprintReadOnly, Category = "Shop|MobileStorePurchase")
+	UPurchaseWidget* PurchaseWidget;
 
 	TSharedPtr<FOnlineStoreOffer> StoreOfferInfo;
 
@@ -32,6 +36,8 @@ public:
 	virtual void Init_Implementation() override;
 
 	virtual void Buy_Implementation() override;
+
+	virtual void Finish_Implementation() override;
 
 	virtual int GetPrice_Implementation() const override;
 	
@@ -61,4 +67,11 @@ protected:
 	void ProcessPurchaseComplete(bool Success, FPurchaseReceiptInfo Reciept);
 
 	void CheckProduct();
+
+	void StartRealBuyProcess();
+
+private:
+
+	void OpenPurchaseWidget();
+	void ClosePurchaseWidget();
 };
