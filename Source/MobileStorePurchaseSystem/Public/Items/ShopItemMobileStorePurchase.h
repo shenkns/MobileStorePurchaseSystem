@@ -10,7 +10,6 @@
 
 #include "ShopItemMobileStorePurchase.generated.h"
 
-struct FOnlineError;
 class UPurchaseWidget;
 
 UCLASS()
@@ -29,6 +28,7 @@ protected:
 
 	FPurchaseReceipt PurchaseReceipt;
 
+	UPROPERTY()
 	FTimerHandle FinalizeTimer;
 	
 public:
@@ -67,11 +67,11 @@ protected:
 	void ProcessPurchaseComplete(bool Success, FPurchaseReceiptInfo Reciept);
 
 	void CheckProduct();
+	
+private:
 
 	UFUNCTION()
 	void StartRealBuyProcess();
-	
-private:
 
 	void OpenPurchaseWidget();
 	void ClosePurchaseWidget();
