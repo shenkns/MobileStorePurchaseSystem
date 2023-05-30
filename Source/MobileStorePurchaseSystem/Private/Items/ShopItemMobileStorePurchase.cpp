@@ -206,8 +206,8 @@ void UShopItemMobileStorePurchase::StartRealBuyProcess()
 #endif
 		if(IsStoreInfoReady())
 		{
-			GetMobileStorePurchaseManager()->OnPurchaseComplete.AddDynamic(this, &UMetaShopMobilePurchaseSKU::ProcessPurchaseComplete);
-			GetMobileStorePurchaseManager()->StartPurchase(GetProductID(), ShopData->IsConsumable);
+			GetMobileStorePurchaseManager()->OnPurchaseComplete.AddDynamic(this, &UShopItemMobileStorePurchase::ProcessPurchaseComplete);
+			GetMobileStorePurchaseManager()->StartPurchase(GetProductID(), Cast<UMobileStorePurchaseShopItemData>(ShopData)->bIsConsumable);
 		}
 		else
 		{
