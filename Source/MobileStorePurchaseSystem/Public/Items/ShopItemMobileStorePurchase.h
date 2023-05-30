@@ -24,7 +24,7 @@ protected:
 
 	TSharedPtr<FOnlineStoreOffer> StoreOfferInfo;
 
-	bool StoreInfoReceived;
+	bool bStoreInfoRecieved;
 
 	FPurchaseReceipt PurchaseReceipt;
 

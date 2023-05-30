@@ -55,9 +55,9 @@ int UShopItemMobileStorePurchase::GetPrice_Implementation() const
 	{
 #if PLATFORM_ANDROID
 		// We divide price by 100 because it include cents
-		return StoreInfoReceived ? StoreOfferInfo->NumericPrice/1000000 : 0;
+		return bStoreInfoRecieved ? StoreOfferInfo->NumericPrice/1000000 : 0;
 #else
-		return StoreInfoReceived ? StoreOfferInfo->NumericPrice : 0;
+		return bStoreInfoRecieved ? StoreOfferInfo->NumericPrice : 0;
 #endif
 	}
 	else
@@ -74,11 +74,11 @@ bool UShopItemMobileStorePurchase::CanBeBought_Implementation() const
 
 	if (Cast<UMobileStorePurchaseShopItemData>(ShopData))
 	{
-#if WITH_EDITOR
-		return true;
+#if UE_BUILD_SHIPPING && (PLATFORM_ANDROID || PLATFORM_IOS)
+		return IsStoreInfoReady();
 #endif
 		
-		return IsStoreInfoReady();
+		return true;
 	}
 	else
 	{
@@ -88,10 +88,10 @@ bool UShopItemMobileStorePurchase::CanBeBought_Implementation() const
 
 bool UShopItemMobileStorePurchase::IsStoreInfoReady() const
 {
-#if WITH_EDITOR
-	return true;
+#if UE_BUILD_SHIPPING && (PLATFORM_ANDROID || PLATFORM_IOS)
+	return bStoreInfoRecieved;
 #else
-	return StoreInfoReceived;
+	return true;
 #endif
 }
 
@@ -143,13 +143,13 @@ void UShopItemMobileStorePurchase::ProcessPurchaseComplete(bool Success, FPurcha
 
 void UShopItemMobileStorePurchase::CheckProduct()
 {
-	if (!GetMobileStorePurchaseManager() || StoreInfoReceived) return;
+	if (!GetMobileStorePurchaseManager() || bStoreInfoRecieved) return;
 
 	StoreOfferInfo = GetMobileStorePurchaseManager()->GetProduct(GetProductID());
 	
 	if (StoreOfferInfo.IsValid())
 	{
-		StoreInfoReceived = true;
+		bStoreInfoRecieved = true;
 
 		DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
 			LogMobileStorePurchaseSystem,
