@@ -1,6 +1,7 @@
 // Copyright shenkns Mobile Store Purchase System Developed With Unreal Engine. All Rights Reserved 2023.
 
 using UnrealBuildTool;
+using System.IO;
 
 public class MobileStorePurchaseSystem : ModuleRules
 {
@@ -48,5 +49,18 @@ public class MobileStorePurchaseSystem : ModuleRules
 				"OnlineSubsystem"
 			}
 		);
+		
+		if(Target.Platform == UnrealTargetPlatform.Android)
+		{
+			PublicDependencyModuleNames.AddRange(
+				new string[]
+				{
+					"Launch"
+				}
+			);
+
+			string PluginPath = Utils.MakePathRelativeTo(ModuleDirectory, Target.RelativeEnginePath);
+			AdditionalPropertiesForReceipt.Add("AndroidPlugin", Path.Combine(PluginPath, "MobileStorePurchaseSystem_UPL_Android.xml"));
+		}
 	}
 }

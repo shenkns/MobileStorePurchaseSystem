@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root xmlns:android="http://schemas.android.com/apk/res/android">
+	<init>
+		<log text="InGame Billing Initialization"/>
+	</init>
+
+	<androidManifestUpdates>
+	</androidManifestUpdates>
+
+	<proguardAdditions>
+		<insert>
+		</insert>
+	</proguardAdditions>
+
+	<buildscriptGradleAdditions>
+		<insert>
+		</insert>
+	</buildscriptGradleAdditions>
+
+	<prebuildCopies>
+		<copyDir src="$S(PluginDir)/External/Android" dst="$S(BuildDir)/src"/>
+	</prebuildCopies>
+
+	<proguardAdditions>
+		<insert>
+			-keep class com.billing.unreal.** { *; }
+			-keepnames class com.billing.unreal.** { *; }
+		</insert>
+	</proguardAdditions>
+
+	<buildGradleAdditions>
+		<insert>
+			dependencies {
+				def billing_version = "5.0.0"
+
+				implementation "com.android.billingclient:billing:$billing_version"
+
+				compile "com.google.guava:guava:16+"
+				
+				implementation 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
+			}
+		</insert>
+	</buildGradleAdditions>
+	
+	<gameActivityImportAdditions>
+		<insert>
+			import com.billing.unreal.UnrealBillingAndroid;
+		</insert>
+	</gameActivityImportAdditions>
+
+	<gameActivityClassAdditions>
+		<insert>
+			UnrealBillingAndroid unrealAndroidBilling;
+		</insert>
+	</gameActivityClassAdditions>
+
+	<gameActivityOnCreateAdditions>
+		<insert>
+			unrealAndroidBilling = new UnrealBillingAndroid();
+			unrealAndroidBilling.init(this);
+		</insert>
+	</gameActivityOnCreateAdditions>
+
+</root>
