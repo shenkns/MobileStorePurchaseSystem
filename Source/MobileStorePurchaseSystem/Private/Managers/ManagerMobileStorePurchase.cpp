@@ -10,41 +10,11 @@
 #include "Module/MobileStorePurchaseSystemModule.h"
 #include "Module/MobileStorePurchaseSystemSettings.h"
 #include "Interfaces/OnlineIdentityInterface.h"
+#include "PlatformTypePurchases/PlatformTypePurchase.h"
 
 #if PLATFORM_IOS
 	#include "MetaManager/Controllers/ShopController/IOSPurchase.h"
 #endif
-
-/****************/
-
-IPlatformTypePurchase::IPlatformTypePurchase(UManagerMobileStorePurchase* InManager) : Manager(InManager)
-{
-	OnlineSubsystem = IOnlineSubsystem::GetByPlatform();
-	check(Manager);
-	check(OnlineSubsystem);
-}
-
-IOnlinePurchasePtr IPlatformTypePurchase::GetOnlinePurchase() const
-{
-	return Manager->OnlinePurchase;
-}
-
-TArray<FString>& IPlatformTypePurchase::GetPendingProductIdRequests() const
-{
-	return Manager->PendingProductIdRequests;
-}
-
-TArray<FString>& IPlatformTypePurchase::GetProductIdRequestsInProgress() const
-{
-	return Manager->ProductIdRequestsInProgress;
-}
-
-TMap<FString, TSharedPtr<FOnlineStoreOffer>>& IPlatformTypePurchase::GetStoreProducts() const
-{
-	return Manager->StoreProducts;
-}
-
-/****************/
 
 void UManagerMobileStorePurchase::InitManager()
 {

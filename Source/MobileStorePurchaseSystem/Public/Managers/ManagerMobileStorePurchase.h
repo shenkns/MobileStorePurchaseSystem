@@ -4,78 +4,17 @@
 
 #include "Managers/Manager.h"
 
-#include "Interfaces/OnlineStoreInterfaceV2.h"
 #include "OnlineSubsystem.h"
+#include "Interfaces/OnlineStoreInterfaceV2.h"
+#include "Proxies/PurchaseProxyInterface.h"
 
 #include "ManagerMobileStorePurchase.generated.h"
 
+class IPlatformTypePurchase;
 class UShopItemData;
 class UMobileStorePurchaseShopItemData;
 class UManagerMobileStorePurchase;
-
-struct FPurchaseInfoRaw
-{
-
-	FString ProductID;
-
-	FString TransactionID;
-
-	TMap<FString, FString> CustomData;
-	
-};
-
-DECLARE_MULTICAST_DELEGATE_OneParam(FProductReceiveEvent, TSharedPtr<FOnlineStoreOffer> ProductInfo);
-DECLARE_MULTICAST_DELEGATE_OneParam(FProductPurchaseEvent, FPurchaseInfoRaw PurchaseInfo);
-DECLARE_MULTICAST_DELEGATE_OneParam(FProductPurchaseErrorEvent, FString Error);
-
-UCLASS(Abstract)
-class MOBILESTOREPURCHASESYSTEM_API UPurchaseProxyInterface : public UObject
-{
-	GENERATED_BODY()
-	
-public:
-
-	UPurchaseProxyInterface(){}
-	
-	FProductReceiveEvent OnProductReceive;
-	FProductPurchaseEvent OnProductPurchased;
-	FProductPurchaseErrorEvent OnProductPurchaseError;
-
-	// Start purchase process
-	virtual void Purchase(FString ProductID){};
-
-	// Tell platform that we received a product. Place custom information into CustomData if necessary
-	virtual void FinalizePurchase(const FPurchaseInfoRaw& PurchaseInfo){};
-
-	// Request products info
-	virtual void RequestProducts(TArray<FString> ProductsID){};
-
-	// All other functions are platform related
-};
-
-/** IPlatformTypePurchase interface */
-class IPlatformTypePurchase
-{
-public:
-
-	virtual ~IPlatformTypePurchase() = default;
-
-	explicit IPlatformTypePurchase(UManagerMobileStorePurchase* InManager);
-
-	virtual void Purchase(FString ProductID, bool Consumable) = 0;
-	virtual void RestorePurchases() = 0;
-	virtual void RequestProducts() = 0;
-
-protected:
-
-	UManagerMobileStorePurchase* Manager = nullptr;
-	IOnlineSubsystem* OnlineSubsystem = nullptr;
-
-	IOnlinePurchasePtr GetOnlinePurchase() const;
-	TArray<FString>& GetPendingProductIdRequests() const;
-	TArray<FString>& GetProductIdRequestsInProgress() const;
-	TMap<FString, TSharedPtr<FOnlineStoreOffer>>& GetStoreProducts() const;
-};
+class UPurchaseProxyInterface;
 
 USTRUCT(BlueprintType)
 struct MOBILESTOREPURCHASESYSTEM_API FPurchaseReceiptInfo
@@ -106,7 +45,7 @@ class MOBILESTOREPURCHASESYSTEM_API UManagerMobileStorePurchase : public UManage
 
 public:
 
-	friend class IPlatformTypePurchase;
+	friend IPlatformTypePurchase;
 
 	UPROPERTY(BlueprintAssignable, Category = "Shop")
 	FPurchaseEvent OnPurchaseRestore;
