@@ -99,11 +99,11 @@ void UAndroidBillingHelper::FinalizePurchase(FAndroidPurchaseInfo PurchaseInfo, 
 
 JNI_METHOD void Java_com_billing_unreal_UnrealBillingAndroid_onProductsPurchaseSuccessful(JNIEnv *env, jobject obj, jstring purchaseJSON, jstring signature)
 {
-	LOG(LogMobileStorePurchaseSystem, "UE Billing Product Purchased")
+	LOG_STATIC(LogMobileStorePurchaseSystem, "UE Billing Product Purchased")
 	
 	const FString JSONString = FJavaHelper::FStringFromParam(env, purchaseJSON);
 
-	LOG(LogMobileStorePurchaseSystem, "Product JSON: %s", *JSONString)
+	LOG_STATIC(LogMobileStorePurchaseSystem, "Product JSON: %s", *JSONString)
 
 	// Purchase JSON example:
 	//{ 
@@ -162,11 +162,11 @@ JNI_METHOD void Java_com_billing_unreal_UnrealBillingAndroid_onProductsQuery(JNI
 		
 	int ProductsNum = env->GetArrayLength(productsDataJSON);
 
-	LOG(LogMobileStorePurchaseSystem, "Recieved Products")
+	LOG_STATIC(LogMobileStorePurchaseSystem, "Recieved Products")
 		
 	if(ProductsNum <= 0) return;
 
-	LOG(LogMobileStorePurchaseSystem, "Products num: %i", ProductsNum)
+	LOG_STATIC(LogMobileStorePurchaseSystem, "Products num: %i", ProductsNum)
 
 	TArray<FAndroidProductInfo> ProductsInfo; 
 		
@@ -176,7 +176,7 @@ JNI_METHOD void Java_com_billing_unreal_UnrealBillingAndroid_onProductsQuery(JNI
 
 		const FString JSONString = FJavaHelper::FStringFromParam(env, objKey);
 
-		LOG(LogMobileStorePurchaseSystem, "Product JSON: %s", *JSONString)
+		LOG_STATIC(LogMobileStorePurchaseSystem, "Product JSON: %s", *JSONString)
 
 		TSharedPtr<FJsonObject> MyJson = MakeShareable(new FJsonObject);
 		TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JSONString);
@@ -193,12 +193,12 @@ JNI_METHOD void Java_com_billing_unreal_UnrealBillingAndroid_onProductsQuery(JNI
 			ProductInfo.FormattedPrice = MyJson->GetStringField("FormattedPrice");
 			ProductInfo.MicrosPrice = MyJson->GetIntegerField("Price");
 
-			UE_LOG(LogTemp, Log, TEXT("Product info deserialized"));
+			LOG_STATIC(LogMobileStorePurchaseSystem, "Product info deserialized")
 
 			ProductsInfo.Add(ProductInfo);
 		}
 
-		LOG(LogMobileStorePurchaseSystem, "Send Products To Unreal")
+		LOG_STATIC(LogMobileStorePurchaseSystem, "Send Products To Unreal")
 		
 		AsyncTask(ENamedThreads::GameThread, [ProductsInfo]()
 		{
