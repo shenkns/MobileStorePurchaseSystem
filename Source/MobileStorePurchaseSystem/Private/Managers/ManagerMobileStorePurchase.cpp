@@ -13,7 +13,7 @@
 #include "PlatformTypePurchases/PlatformTypePurchase.h"
 
 #if PLATFORM_IOS
-	#include "MetaManager/Controllers/ShopController/IOSPurchase.h"
+#include "PlatformTypePurchases/PlatformTypePurchaseIOS.h"
 #endif
 
 void UManagerMobileStorePurchase::InitManager()
@@ -33,7 +33,7 @@ void UManagerMobileStorePurchase::InitManager()
 
 // TODO: Move IOS implementation to new interface
 #if PLATFORM_IOS
-	PlatformImpl = MakeUnique<class FIOSPurchase>(this);
+	PlatformImpl = MakeUnique<FPlatformTypePurchaseIOS>(this);
 #endif
 
 	if(!PlatformImpl.IsValid())
