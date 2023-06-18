@@ -34,12 +34,14 @@ void UManagerMobileStorePurchase::InitManager()
 // TODO: Move IOS implementation to new interface
 #if PLATFORM_IOS
 	PlatformImpl = MakeUnique<FPlatformTypePurchaseIOS>(this);
-#endif
 
 	if(!PlatformImpl.IsValid())
 	{
 		// todo PlatformImpl Is Not Valid
 	}
+#endif
+
+	RequestAllProducts();
 }
 
 void UManagerMobileStorePurchase::InitPlatformInterface()
