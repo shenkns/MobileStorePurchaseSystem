@@ -35,9 +35,13 @@ class MOBILESTOREPURCHASESYSTEM_API UPurchaseProxyInterface : public UObject
 public:
 
 	UPurchaseProxyInterface(){}
-	
+
+public:
+
 	FProductReceiveEvent OnProductReceive;
+	
 	FProductPurchaseEvent OnProductPurchased;
+
 	FProductPurchaseErrorEvent OnProductPurchaseError;
 
 	// Start purchase process

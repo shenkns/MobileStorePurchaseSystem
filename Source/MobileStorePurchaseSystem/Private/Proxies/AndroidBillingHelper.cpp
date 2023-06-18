@@ -15,7 +15,7 @@
 
 UAndroidBillingHelper* UAndroidBillingHelper::Get()
 {
-	const FMobileStorePurchaseSystemModule& BillingModule = FModuleManager::GetModuleChecked<FMobileStorePurchaseSystemModule>("InGameBilling");
+	const FMobileStorePurchaseSystemModule& BillingModule = FModuleManager::GetModuleChecked<FMobileStorePurchaseSystemModule>("MobileStorePurchaseSystem");
 	
 	return BillingModule.GetAndroidBillingHelper();
 }

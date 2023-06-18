@@ -28,19 +28,17 @@ void UPurchaseProxyInterfaceAndroid::RequestProducts(TArray<FString> ProductsID)
 
 	LOG(LogMobileStorePurchaseSystem, "%i Store Products Requested", ProductsID.Num())
 	
-	UAndroidBillingHelper* Billing = UAndroidBillingHelper::Get();
-	if(!Billing)
+	if(UAndroidBillingHelper* Billing = UAndroidBillingHelper::Get())
 	{
-		OnProductPurchaseError.Broadcast("No Billing");
+		LOG(LogMobileStorePurchaseSystem, "Adnroid Billing Helper Products Request")
+		Billing->OnProductInfoReceive.AddUniqueDynamic(this, &UPurchaseProxyInterfaceAndroid::ReceiveProduct);
+		Billing->RequestProducts(ProductsID);
+
 		return;
 	}
 
-	Billing->OnProductInfoReceive.AddUniqueDynamic(this, &UPurchaseProxyInterfaceAndroid::ReceiveProduct);
-	
-	if(UAndroidBillingHelper* BillingHelper = UAndroidBillingHelper::Get())
-	{
-		BillingHelper->RequestProducts(ProductsID);
-	}
+	LOG(LogMobileStorePurchaseSystem, "Adnroid Billing Helper Products Request Failed")
+	OnProductPurchaseError.Broadcast("No Billing");
 }
 
 void UPurchaseProxyInterfaceAndroid::FinalizePurchase(const FPurchaseInfoRaw& PurchaseInfo)
