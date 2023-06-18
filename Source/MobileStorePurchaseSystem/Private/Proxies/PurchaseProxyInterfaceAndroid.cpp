@@ -25,6 +25,8 @@ void UPurchaseProxyInterfaceAndroid::Purchase(FString ProductID)
 void UPurchaseProxyInterfaceAndroid::RequestProducts(TArray<FString> ProductsID)
 {
 	Super::RequestProducts(ProductsID);
+
+	LOG(LogMobileStorePurchaseSystem, "%i Store Products Requested", ProductsID.Num())
 	
 	UAndroidBillingHelper* Billing = UAndroidBillingHelper::Get();
 	if(!Billing)
@@ -35,7 +37,10 @@ void UPurchaseProxyInterfaceAndroid::RequestProducts(TArray<FString> ProductsID)
 
 	Billing->OnProductInfoReceive.AddUniqueDynamic(this, &UPurchaseProxyInterfaceAndroid::ReceiveProduct);
 	
-	UAndroidBillingHelper::Get()->RequestProducts(ProductsID);
+	if(UAndroidBillingHelper* BillingHelper = UAndroidBillingHelper::Get())
+	{
+		BillingHelper->RequestProducts(ProductsID);
+	}
 }
 
 void UPurchaseProxyInterfaceAndroid::FinalizePurchase(const FPurchaseInfoRaw& PurchaseInfo)

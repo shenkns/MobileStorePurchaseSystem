@@ -21,6 +21,7 @@ void UManagerMobileStorePurchase::InitManager()
 	Super::InitManager();
 	
 	InitPlatformInterface();
+	RequestAllProducts();
 
 	OnlineSubsystem = IOnlineSubsystem::GetByPlatform();
 	if (!OnlineSubsystem) return;
@@ -40,8 +41,6 @@ void UManagerMobileStorePurchase::InitManager()
 		// todo PlatformImpl Is Not Valid
 	}
 #endif
-
-	RequestAllProducts();
 }
 
 void UManagerMobileStorePurchase::InitPlatformInterface()
@@ -173,7 +172,7 @@ void UManagerMobileStorePurchase::RequestProducts()
 		return;
 	}
 	
-	if (PlatformImpl && PendingProductIdRequests.Num() > 0)
+	if (PlatformImpl)
 	{
 		PlatformImpl->RequestProducts();
 	}

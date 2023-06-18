@@ -18,6 +18,11 @@ void FMobileStorePurchaseSystemModule::StartupModule()
 #if UE_EDITOR
 	RegisterSystemSettings();
 #endif
+
+#if PLATFORM_ANDROID
+	AndroidBillingHelper = NewObject<UAndroidBillingHelper>(GetTransientPackage());
+	AndroidBillingHelper->AddToRoot();
+#endif
 }
 
 void FMobileStorePurchaseSystemModule::ShutdownModule()
