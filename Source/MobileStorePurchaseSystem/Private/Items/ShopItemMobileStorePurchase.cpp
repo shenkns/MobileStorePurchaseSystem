@@ -172,7 +172,7 @@ void UShopItemMobileStorePurchase::CheckProduct()
 
 void UShopItemMobileStorePurchase::OpenPurchaseWidget()
 {
-	PurchaseWidget = CreateWidget<UPurchaseWidget>(GetWorld(), GetDefault<UMobileStorePurchaseSystemSettings>()->PurchaseWidgetClass);
+	PurchaseWidget = CreateWidget<UPurchaseWidget, UWorld>(GetWorld(), GetDefault<UMobileStorePurchaseSystemSettings>()->PurchaseWidgetClass);
 	PurchaseWidget->Show();
 }
 
