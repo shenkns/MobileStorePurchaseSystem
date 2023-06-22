@@ -9,6 +9,10 @@
 #include "Module/ShopSystemSettings.h"
 #endif
 
+#if PLATFORM_ANDROID
+#include "Proxies/AndroidBillingHelper.h"
+#endif
+
 IMPLEMENT_MODULE(FMobileStorePurchaseSystemModule, MobileStorePurchaseSystem);
 
 MOBILESTOREPURCHASESYSTEM_API DEFINE_LOG_CATEGORY(LogMobileStorePurchaseSystem);
