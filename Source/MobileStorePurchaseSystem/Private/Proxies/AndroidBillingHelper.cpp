@@ -23,7 +23,10 @@ UAndroidBillingHelper* UAndroidBillingHelper::Get()
 void UAndroidBillingHelper::RequestProducts(TArray<FString> ProductIDs)
 {
 #if PLATFORM_ANDROID
-	LOG(LogMobileStorePurchaseSystem, "UE Billing Request Products")
+	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+		LogMobileStorePurchaseSystem,
+		"UE Billing Request Products"
+	)
 	
 	JNIEnv* Env = FAndroidApplication::GetJavaEnv();
 	if (!Env) return;
@@ -52,7 +55,10 @@ void UAndroidBillingHelper::RequestProducts(TArray<FString> ProductIDs)
 void UAndroidBillingHelper::Purchase(FString ProductID)
 {
 #if PLATFORM_ANDROID
-	LOG(LogMobileStorePurchaseSystem, "UE Billing Purchase Start")
+	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+		 LogMobileStorePurchaseSystem,
+		 "UE Billing Purchase Start"
+	)
 	
 	JNIEnv* Env = FAndroidApplication::GetJavaEnv();
 	if (!Env) return;
@@ -75,7 +81,10 @@ void UAndroidBillingHelper::Purchase(FString ProductID)
 void UAndroidBillingHelper::FinalizePurchase(FAndroidPurchaseInfo PurchaseInfo, bool Consume)
 {
 #if PLATFORM_ANDROID
-	LOG(LogMobileStorePurchaseSystem, "UE Billing Purchase Start")
+	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+		 LogMobileStorePurchaseSystem,
+		 "UE Billing Purchase Start"
+	)
 	
 	JNIEnv* Env = FAndroidApplication::GetJavaEnv();
 	if (!Env) return;
@@ -208,8 +217,6 @@ JNI_METHOD void Java_com_billing_unreal_UnrealBillingAndroid_onProductsQuery(JNI
 			}
 		});
 	}
-	
-	
 };
 
 #endif

@@ -14,7 +14,11 @@
 
 void UShopItemMobileStorePurchase::Init_Implementation()
 {
-	UE_LOG(LogTemp, Log, TEXT("SKU %s: Init"), *ShopData->GetName());
+	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+		LogMobileStorePurchaseSystem,
+		"SKU %s: Init",
+		*ShopData->GetName()
+	)
 
 	const UManagersSystem* ManagersSystem = GetManagersSystem();
 	if(!ManagersSystem) return;
@@ -29,6 +33,13 @@ void UShopItemMobileStorePurchase::Init_Implementation()
 		if (!StoreOfferInfo)
 		{
 			ManagerMobileStorePurchase->OnProductsReceived.AddUObject(this, &UShopItemMobileStorePurchase::CheckProduct);
+			
+			DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+				LogMobileStorePurchaseSystem,
+				"Waiting %s Store Product For %s Shop Item",
+				*GetProductID(),
+				*GetName()
+			)
 		}
 	}
 }
@@ -74,11 +85,7 @@ bool UShopItemMobileStorePurchase::CanBeBought_Implementation() const
 
 	if (Cast<UMobileStorePurchaseShopItemData>(ShopData))
 	{
-#if UE_BUILD_SHIPPING && (PLATFORM_ANDROID || PLATFORM_IOS)
 		return IsStoreInfoReady();
-#endif
-		
-		return true;
 	}
 	else
 	{
@@ -88,8 +95,14 @@ bool UShopItemMobileStorePurchase::CanBeBought_Implementation() const
 
 bool UShopItemMobileStorePurchase::IsStoreInfoReady() const
 {
-#if UE_BUILD_SHIPPING && (PLATFORM_ANDROID || PLATFORM_IOS)
+#if PLATFORM_ANDROID || PLATFORM_IOS
+
+#if UE_BUILD_SHIPPING
 	return bStoreInfoRecieved;
+#else
+	return GetDefault<UMobileStorePurchaseSystemSettings>()->bFakeInAppPurchasesInDevBuild || bStoreInfoRecieved;
+#endif
+	
 #else
 	return true;
 #endif
@@ -188,7 +201,10 @@ void UShopItemMobileStorePurchase::StartRealBuyProcess()
 {
 	if (ShopData && Cast<UMobileStorePurchaseShopItemData>(ShopData))
 	{
-		UE_LOG(LogTemp, Log, TEXT("SKU %s: Buy"), *ShopData->GetName());
+		DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+			LogMobileStorePurchaseSystem, "SKU %s: Buy",
+			*ShopData->GetName()
+		)
 
 #if WITH_EDITOR
 		FinishPurchase(true);

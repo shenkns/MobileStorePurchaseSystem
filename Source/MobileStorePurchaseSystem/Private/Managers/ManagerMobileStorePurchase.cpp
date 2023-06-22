@@ -56,6 +56,13 @@ void UManagerMobileStorePurchase::InitPlatformInterface()
 			PurchaseInterface->OnProductPurchased.AddUObject(this, &UManagerMobileStorePurchase::ProcessPurchase);
 			PurchaseInterface->OnProductPurchaseError.AddUObject(this, &UManagerMobileStorePurchase::ProcessPurchaseError);
 			
+			DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+				LogMobileStorePurchaseSystem,
+				"%s Platform Purchase Interface Initializaed: %s",
+				*ProxyClass->LoadSynchronous()->GetName(),
+				*PurchaseInterface->GetName()
+			)
+			
 			return;
 		}
 	}
@@ -72,12 +79,21 @@ TSharedPtr<FOnlineStoreOffer> UManagerMobileStorePurchase::GetProduct(FString Pr
 
 void UManagerMobileStorePurchase::RequestAllProducts()
 {
+	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+		LogMobileStorePurchaseSystem,
+		"Trying To Request Store Products"
+	)
+	
 	const UMobileStorePurchaseSystemSettings* Settings = GetDefault<UMobileStorePurchaseSystemSettings>();
-	checkf(Settings, TEXT("Not able to get settings"));
+	if(!Settings) return;
 
 	for (FString ProductID : Settings->StoreProductIDs)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Add pending ProductID to request - %s"), *ProductID);
+		DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+			LogMobileStorePurchaseSystem,
+			"Add pending ProductID to request - %s",
+			*ProductID
+		)
 
 		PendingProductIdRequests.Add(ProductID);
 	}
