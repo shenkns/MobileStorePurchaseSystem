@@ -7,6 +7,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Data/MobileStorePurchaseShopItemData.h"
 #include "Data/ShopItemData.h"
+#include "Kismet/GameplayStatics.h"
 #include "Managers/ShopManager.h"
 #include "Module/MobileStorePurchaseSystemModule.h"
 #include "Module/MobileStorePurchaseSystemSettings.h"
@@ -185,7 +186,10 @@ void UShopItemMobileStorePurchase::CheckProduct()
 
 void UShopItemMobileStorePurchase::OpenPurchaseWidget()
 {
-	PurchaseWidget = CreateWidget<UPurchaseWidget, UWorld>(GetWorld(), GetDefault<UMobileStorePurchaseSystemSettings>()->PurchaseWidgetClass);
+	PurchaseWidget = CreateWidget<UPurchaseWidget>(UGameplayStatics::GetPlayerController(this, 0),
+		GetDefault<UMobileStorePurchaseSystemSettings>()->PurchaseWidgetClass
+	);
+	
 	PurchaseWidget->Show();
 }
 
