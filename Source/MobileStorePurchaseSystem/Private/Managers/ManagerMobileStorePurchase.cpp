@@ -4,7 +4,8 @@
 
 #include "LogSystem.h"
 #include "ManagersSystem.h"
-#include "Data/MobileStorePurchaseShopItemData.h"
+#include "Data/ShopItemData.h"
+#include "Data/StoreShopCustomData.h"
 #include "Interfaces/OnlinePurchaseInterface.h"
 #include "Managers/DataManager.h"
 #include "Module/MobileStorePurchaseSystemModule.h"
@@ -111,7 +112,7 @@ void UManagerMobileStorePurchase::RequestProductId(FString ProductId)
 	}
 }
 
-UMobileStorePurchaseShopItemData* UManagerMobileStorePurchase::FindShopItemByProductId(FString ProductId) const
+UShopItemData* UManagerMobileStorePurchase::FindShopItemByProductId(FString ProductId) const
 {
 	const UManagersSystem* ManagersSystem = GetManagerSystem();
 	if(!ManagersSystem) return nullptr;
@@ -119,11 +120,20 @@ UMobileStorePurchaseShopItemData* UManagerMobileStorePurchase::FindShopItemByPro
 	const UDataManager* DataManager = ManagersSystem->GetManager<UDataManager>();
 	if(!DataManager) return nullptr;
 	
-	TArray<UMobileStorePurchaseShopItemData*> DataAssets = DataManager->GetDataAssets<UMobileStorePurchaseShopItemData>();
+	TArray<UShopItemData*> DataAssets = DataManager->GetDataAssets<UShopItemData>();
 
-	for (UMobileStorePurchaseShopItemData* Data : DataAssets)
+	for (UShopItemData* Data : DataAssets)
 	{
-		if (Data && Data->ProductID == ProductId) return Data;
+		if(Data)
+		{
+			if(const UStoreShopCustomData* StoreShopCustomData = Data->GetCustomData<UStoreShopCustomData>())
+			{
+				if(StoreShopCustomData->ProductID == ProductId) 
+				{
+					return Data;
+				}
+			}
+		}
 	}
 	
 	return nullptr;
@@ -167,7 +177,11 @@ void UManagerMobileStorePurchase::FinalizePurchase(FPurchaseReceiptInfo Purchase
 		// We need to consume or acknowledge, so we need to place info in custom data
 		PurchaseInfoRaw.CustomData.Add(
 			"FinalizeType",
-			PurchaseReceiptInfo.ShopItemData ? PurchaseReceiptInfo.ShopItemData->bIsConsumable ? "Consume" : "Acknowledge": "Consume"
+			(PurchaseReceiptInfo.ShopItemData && PurchaseReceiptInfo.ShopItemData->GetCustomData<UStoreShopCustomData>()) ? 
+				PurchaseReceiptInfo.ShopItemData->GetCustomData<UStoreShopCustomData>()->bIsConsumable ? 
+				"Consume" : 
+				"Acknowledge": 
+				"Consume"
 		);
 		
 		PurchaseInterface->FinalizePurchase(PurchaseInfoRaw);

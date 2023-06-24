@@ -5,7 +5,7 @@
 #include "LogSystem.h"
 #include "ManagersSystem.h"
 #include "Blueprint/UserWidget.h"
-#include "Data/MobileStorePurchaseShopItemData.h"
+#include "Data/StoreShopCustomData.h"
 #include "Data/ShopItemData.h"
 #include "Kismet/GameplayStatics.h"
 #include "Managers/ShopManager.h"
@@ -27,7 +27,7 @@ void UShopItemMobileStorePurchase::Init_Implementation()
 	UManagerMobileStorePurchase* ManagerMobileStorePurchase =  ManagersSystem->GetManager<UManagerMobileStorePurchase>();
 	if(!ManagerMobileStorePurchase) return;
 	
-	if (ShopData && Cast<UMobileStorePurchaseShopItemData>(ShopData))
+	if (GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
 	{
 		CheckProduct();
 
@@ -63,7 +63,7 @@ void UShopItemMobileStorePurchase::Finish_Implementation()
 
 int UShopItemMobileStorePurchase::GetPrice_Implementation() const
 {
-	if (ShopData && Cast<UMobileStorePurchaseShopItemData>(ShopData))
+	if (GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
 	{
 #if PLATFORM_ANDROID
 		// We divide price by 100 because it include cents
@@ -84,7 +84,7 @@ bool UShopItemMobileStorePurchase::CanBeBought_Implementation() const
 
 	if(FinalizeTimer.IsValid()) return false;
 
-	if (Cast<UMobileStorePurchaseShopItemData>(ShopData))
+	if (GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
 	{
 		return IsStoreInfoReady();
 	}
@@ -118,13 +118,14 @@ UManagerMobileStorePurchase* UShopItemMobileStorePurchase::GetMobileStorePurchas
 
 FString UShopItemMobileStorePurchase::GetProductID_Implementation() const
 {
-	if(!ShopData) return FString();
-
-	if(const UMobileStorePurchaseShopItemData* MobileStorePurchaseShopItemData = Cast<UMobileStorePurchaseShopItemData>(ShopData))
+	if(const UShopItemData* StoreShopData = GetShopData<UShopItemData>())
 	{
-		return MobileStorePurchaseShopItemData->ProductID;
+		if(const UStoreShopCustomData* StoreShopCustomData = StoreShopData->GetCustomData<UStoreShopCustomData>())
+		{
+			return StoreShopCustomData->ProductID;
+		}
 	}
-
+	
 	return FString();
 }
 
@@ -203,40 +204,43 @@ void UShopItemMobileStorePurchase::ClosePurchaseWidget()
 
 void UShopItemMobileStorePurchase::StartRealBuyProcess()
 {
-	if (ShopData && Cast<UMobileStorePurchaseShopItemData>(ShopData))
+	if(const UShopItemData* StoreShopData = GetShopData<UShopItemData>())
 	{
-		DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-			LogMobileStorePurchaseSystem, "SKU %s: Buy",
-			*ShopData->GetName()
-		)
-
-#if WITH_EDITOR
-		FinishPurchase(true);
-#else
-#if UE_BUILD_DEVELOPMENT
-		if(const UMobileStorePurchaseSystemSettings* Settings = GetDefault<UMobileStorePurchaseSystemSettings>())
+		if(const UStoreShopCustomData* StoreShopCustomData = StoreShopData->GetCustomData<UStoreShopCustomData>())
 		{
-			if(Settings->bFakeInAppPurchasesInDevBuild)
+			DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+				LogMobileStorePurchaseSystem, "SKU %s: Buy",
+				*ShopData->GetName()
+			)
+	
+	#if WITH_EDITOR
+			FinishPurchase(true);
+	#else
+	#if UE_BUILD_DEVELOPMENT
+			if(const UMobileStorePurchaseSystemSettings* Settings = GetDefault<UMobileStorePurchaseSystemSettings>())
 			{
-				FinishPurchase(true);
-				
-				return;
+				if(Settings->bFakeInAppPurchasesInDevBuild)
+				{
+					FinishPurchase(true);
+					
+					return;
+				}
 			}
-		}
-#endif
-		if(IsStoreInfoReady())
-		{
-			GetMobileStorePurchaseManager()->OnPurchaseComplete.AddDynamic(this, &UShopItemMobileStorePurchase::ProcessPurchaseComplete);
-			GetMobileStorePurchaseManager()->StartPurchase(GetProductID(), Cast<UMobileStorePurchaseShopItemData>(ShopData)->bIsConsumable);
+	#endif
+			if(IsStoreInfoReady())
+			{
+				GetMobileStorePurchaseManager()->OnPurchaseComplete.AddDynamic(this, &UShopItemMobileStorePurchase::ProcessPurchaseComplete);
+				GetMobileStorePurchaseManager()->StartPurchase(GetProductID(), StoreShopCustomData->bIsConsumable);
+			}
+			else
+			{
+				FinishPurchase(false);
+			}
+	#endif
 		}
 		else
 		{
-			FinishPurchase(false);
+			Super::Buy_Implementation();
 		}
-#endif
-	}
-	else
-	{
-		Super::Buy_Implementation();
 	}
 }
