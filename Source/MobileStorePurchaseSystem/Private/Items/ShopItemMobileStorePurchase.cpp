@@ -27,7 +27,7 @@ void UShopItemMobileStorePurchase::Init_Implementation()
 	UManagerMobileStorePurchase* ManagerMobileStorePurchase =  ManagersSystem->GetManager<UManagerMobileStorePurchase>();
 	if(!ManagerMobileStorePurchase) return;
 	
-	if (GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
+	if(GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
 	{
 		CheckProduct();
 
@@ -43,24 +43,36 @@ void UShopItemMobileStorePurchase::Init_Implementation()
 			)
 		}
 	}
+	else
+	{
+		Super::Init_Implementation();
+	}
 }
 
 bool UShopItemMobileStorePurchase::Buy_Implementation()
 {
-	OpenPurchaseWidget();
+	if(GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
+	{
+		OpenPurchaseWidget();
 
-	FTimerHandle PurchaseTimer;
+		FTimerHandle PurchaseTimer;
 
-	GetWorld()->GetTimerManager().SetTimer(PurchaseTimer, this, &UShopItemMobileStorePurchase::StartRealBuyProcess, 1.f);
+		GetWorld()->GetTimerManager().SetTimer(PurchaseTimer, this, &UShopItemMobileStorePurchase::StartRealBuyProcess, 1.f);
 
-	return true;
+		return true;
+	}
+
+	return Super::Buy_Implementation();
 }
 
 void UShopItemMobileStorePurchase::Finish_Implementation()
 {
+	if(GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
+	{
+		ClosePurchaseWidget();
+	}
+	
 	Super::Finish_Implementation();
-
-	ClosePurchaseWidget();
 }
 
 int UShopItemMobileStorePurchase::GetPrice_Implementation() const
@@ -82,18 +94,21 @@ int UShopItemMobileStorePurchase::GetPrice_Implementation() const
 
 bool UShopItemMobileStorePurchase::CanBeBought_Implementation() const
 {
-	if (!ShopData) return false;
-
-	if(FinalizeTimer.IsValid()) return false;
-
-	if (GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
+	if(GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
 	{
-		return IsStoreInfoReady();
+		if(FinalizeTimer.IsValid()) return false;
+
+		if (GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
+		{
+			return IsStoreInfoReady();
+		}
+		else
+		{
+			return Super::CanBeBought_Implementation();
+		}
 	}
-	else
-	{
-		return Super::CanBeBought_Implementation();
-	}
+
+	return Super::CanBeBought_Implementation();
 }
 
 bool UShopItemMobileStorePurchase::IsStoreInfoReady() const
