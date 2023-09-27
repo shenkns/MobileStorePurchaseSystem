@@ -6,7 +6,7 @@
 	"Description": "Mobile Store Purchase System Plugin",
 	"Category": "Meta",
 	"CreatedBy": "shenkns",
-	"EngineVersion": "5.1.0",
+	"EngineVersion": "5.1",
 	"CanContainContent": true,
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
