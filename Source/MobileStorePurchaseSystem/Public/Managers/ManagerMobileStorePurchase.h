@@ -5,14 +5,13 @@
 #include "Managers/Manager.h"
 
 #include "OnlineSubsystem.h"
+#include "PlatformTypePurchases/PlatformTypePurchase.h"
 #include "Interfaces/OnlineStoreInterfaceV2.h"
 #include "Proxies/PurchaseProxyInterface.h"
 
 #include "ManagerMobileStorePurchase.generated.h"
 
-class IPlatformTypePurchase;
 class UShopItemData;
-class UMobileStorePurchaseShopItemData;
 class UManagerMobileStorePurchase;
 class UPurchaseProxyInterface;
 
@@ -22,7 +21,7 @@ struct MOBILESTOREPURCHASESYSTEM_API FPurchaseReceiptInfo
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shop|MobileStorePurchase")
-	UMobileStorePurchaseShopItemData* ShopItemData;
+	UShopItemData* ShopItemData;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Shop|MobileStorePurchase")
 	FString ProductID;
@@ -93,7 +92,7 @@ public:
 	UPurchaseProxyInterface* GetPurchaseInterface() const {return PurchaseInterface;}
 
 	UFUNCTION(BlueprintPure, Category = "Shop")
-	UMobileStorePurchaseShopItemData* FindShopItemByProductId(FString ProductId) const;
+	UShopItemData* FindShopItemByProductId(FString ProductId) const;
 
 	virtual void InitManager() override;
 

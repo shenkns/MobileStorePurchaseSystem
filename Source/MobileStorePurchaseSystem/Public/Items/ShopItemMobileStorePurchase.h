@@ -35,7 +35,7 @@ public:
 
 	virtual void Init_Implementation() override;
 
-	virtual void Buy_Implementation() override;
+	virtual bool Buy_Implementation() override;
 
 	virtual void Finish_Implementation() override;
 

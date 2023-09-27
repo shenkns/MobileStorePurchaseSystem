@@ -4,6 +4,7 @@
 
 #include "LogSystem.h"
 #include "Module/MobileStorePurchaseSystemModule.h"
+#include "Module/MobileStorePurchaseSystemSettings.h"
 
 void UPurchaseProxyInterfaceAndroid::Purchase(FString ProductID)
 {
@@ -26,11 +27,17 @@ void UPurchaseProxyInterfaceAndroid::RequestProducts(TArray<FString> ProductsID)
 {
 	Super::RequestProducts(ProductsID);
 
-	LOG(LogMobileStorePurchaseSystem, "%i Store Products Requested", ProductsID.Num())
+	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+		LogMobileStorePurchaseSystem,
+		"%i Store Products Requested",
+	ProductsID.Num())
 	
 	if(UAndroidBillingHelper* Billing = UAndroidBillingHelper::Get())
 	{
-		LOG(LogMobileStorePurchaseSystem, "Adnroid Billing Helper Products Request")
+		DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+			LogMobileStorePurchaseSystem,
+			"Adnroid Billing Helper Products Request"
+		)
 		Billing->OnProductInfoReceive.AddUniqueDynamic(this, &UPurchaseProxyInterfaceAndroid::ReceiveProduct);
 		Billing->RequestProducts(ProductsID);
 

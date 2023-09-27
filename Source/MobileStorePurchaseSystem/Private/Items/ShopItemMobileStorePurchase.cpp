@@ -5,8 +5,9 @@
 #include "LogSystem.h"
 #include "ManagersSystem.h"
 #include "Blueprint/UserWidget.h"
-#include "Data/MobileStorePurchaseShopItemData.h"
+#include "Data/StoreShopCustomData.h"
 #include "Data/ShopItemData.h"
+#include "Kismet/GameplayStatics.h"
 #include "Managers/ShopManager.h"
 #include "Module/MobileStorePurchaseSystemModule.h"
 #include "Module/MobileStorePurchaseSystemSettings.h"
@@ -14,7 +15,11 @@
 
 void UShopItemMobileStorePurchase::Init_Implementation()
 {
-	UE_LOG(LogTemp, Log, TEXT("SKU %s: Init"), *ShopData->GetName());
+	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+		LogMobileStorePurchaseSystem,
+		"SKU %s: Init",
+		*ShopData->GetName()
+	)
 
 	const UManagersSystem* ManagersSystem = GetManagersSystem();
 	if(!ManagersSystem) return;
@@ -22,36 +27,57 @@ void UShopItemMobileStorePurchase::Init_Implementation()
 	UManagerMobileStorePurchase* ManagerMobileStorePurchase =  ManagersSystem->GetManager<UManagerMobileStorePurchase>();
 	if(!ManagerMobileStorePurchase) return;
 	
-	if (ShopData && Cast<UMobileStorePurchaseShopItemData>(ShopData))
+	if(GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
 	{
 		CheckProduct();
 
 		if (!StoreOfferInfo)
 		{
 			ManagerMobileStorePurchase->OnProductsReceived.AddUObject(this, &UShopItemMobileStorePurchase::CheckProduct);
+			
+			DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+				LogMobileStorePurchaseSystem,
+				"Waiting %s Store Product For %s Shop Item",
+				*GetProductID(),
+				*GetName()
+			)
 		}
+	}
+	else
+	{
+		Super::Init_Implementation();
 	}
 }
 
-void UShopItemMobileStorePurchase::Buy_Implementation()
+bool UShopItemMobileStorePurchase::Buy_Implementation()
 {
-	OpenPurchaseWidget();
+	if(GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
+	{
+		OpenPurchaseWidget();
 
-	FTimerHandle PurchaseTimer;
+		FTimerHandle PurchaseTimer;
 
-	GetWorld()->GetTimerManager().SetTimer(PurchaseTimer, this, &UShopItemMobileStorePurchase::StartRealBuyProcess, 1.f);
+		GetWorld()->GetTimerManager().SetTimer(PurchaseTimer, this, &UShopItemMobileStorePurchase::StartRealBuyProcess, 1.f);
+
+		return true;
+	}
+
+	return Super::Buy_Implementation();
 }
 
 void UShopItemMobileStorePurchase::Finish_Implementation()
 {
+	if(GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
+	{
+		ClosePurchaseWidget();
+	}
+	
 	Super::Finish_Implementation();
-
-	ClosePurchaseWidget();
 }
 
 int UShopItemMobileStorePurchase::GetPrice_Implementation() const
 {
-	if (ShopData && Cast<UMobileStorePurchaseShopItemData>(ShopData))
+	if (GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
 	{
 #if PLATFORM_ANDROID
 		// We divide price by 100 because it include cents
@@ -68,28 +94,33 @@ int UShopItemMobileStorePurchase::GetPrice_Implementation() const
 
 bool UShopItemMobileStorePurchase::CanBeBought_Implementation() const
 {
-	if (!ShopData) return false;
-
-	if(FinalizeTimer.IsValid()) return false;
-
-	if (Cast<UMobileStorePurchaseShopItemData>(ShopData))
+	if(GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
 	{
-#if UE_BUILD_SHIPPING && (PLATFORM_ANDROID || PLATFORM_IOS)
-		return IsStoreInfoReady();
-#endif
-		
-		return true;
+		if(FinalizeTimer.IsValid()) return false;
+
+		if (GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
+		{
+			return IsStoreInfoReady();
+		}
+		else
+		{
+			return Super::CanBeBought_Implementation();
+		}
 	}
-	else
-	{
-		return Super::CanBeBought_Implementation();
-	}
+
+	return Super::CanBeBought_Implementation();
 }
 
 bool UShopItemMobileStorePurchase::IsStoreInfoReady() const
 {
-#if UE_BUILD_SHIPPING && (PLATFORM_ANDROID || PLATFORM_IOS)
+#if PLATFORM_ANDROID || PLATFORM_IOS
+
+#if UE_BUILD_SHIPPING
 	return bStoreInfoRecieved;
+#else
+	return GetDefault<UMobileStorePurchaseSystemSettings>()->bFakeInAppPurchasesInDevBuild || bStoreInfoRecieved;
+#endif
+	
 #else
 	return true;
 #endif
@@ -104,13 +135,14 @@ UManagerMobileStorePurchase* UShopItemMobileStorePurchase::GetMobileStorePurchas
 
 FString UShopItemMobileStorePurchase::GetProductID_Implementation() const
 {
-	if(!ShopData) return FString();
-
-	if(const UMobileStorePurchaseShopItemData* MobileStorePurchaseShopItemData = Cast<UMobileStorePurchaseShopItemData>(ShopData))
+	if(const UShopItemData* StoreShopData = GetShopData<UShopItemData>())
 	{
-		return MobileStorePurchaseShopItemData->ProductID;
+		if(const UStoreShopCustomData* StoreShopCustomData = StoreShopData->GetCustomData<UStoreShopCustomData>())
+		{
+			return StoreShopCustomData->ProductID;
+		}
 	}
-
+	
 	return FString();
 }
 
@@ -172,7 +204,10 @@ void UShopItemMobileStorePurchase::CheckProduct()
 
 void UShopItemMobileStorePurchase::OpenPurchaseWidget()
 {
-	PurchaseWidget = CreateWidget<UPurchaseWidget>(GetWorld(), GetDefault<UMobileStorePurchaseSystemSettings>()->PurchaseWidgetClass);
+	PurchaseWidget = CreateWidget<UPurchaseWidget>(UGameplayStatics::GetPlayerController(this, 0),
+		GetDefault<UMobileStorePurchaseSystemSettings>()->PurchaseWidgetClass
+	);
+	
 	PurchaseWidget->Show();
 }
 
@@ -186,37 +221,43 @@ void UShopItemMobileStorePurchase::ClosePurchaseWidget()
 
 void UShopItemMobileStorePurchase::StartRealBuyProcess()
 {
-	if (ShopData && Cast<UMobileStorePurchaseShopItemData>(ShopData))
+	if(const UShopItemData* StoreShopData = GetShopData<UShopItemData>())
 	{
-		UE_LOG(LogTemp, Log, TEXT("SKU %s: Buy"), *ShopData->GetName());
-
-#if WITH_EDITOR
-		FinishPurchase(true);
-#else
-#if UE_BUILD_DEVELOPMENT
-		if(const UMobileStorePurchaseSystemSettings* Settings = GetDefault<UMobileStorePurchaseSystemSettings>())
+		if(const UStoreShopCustomData* StoreShopCustomData = StoreShopData->GetCustomData<UStoreShopCustomData>())
 		{
-			if(Settings->bFakeInAppPurchasesInDevBuild)
+			DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+				LogMobileStorePurchaseSystem, "SKU %s: Buy",
+				*ShopData->GetName()
+			)
+	
+	#if WITH_EDITOR
+			FinishPurchase(true);
+	#else
+	#if UE_BUILD_DEVELOPMENT
+			if(const UMobileStorePurchaseSystemSettings* Settings = GetDefault<UMobileStorePurchaseSystemSettings>())
 			{
-				FinishPurchase(true);
-				
-				return;
+				if(Settings->bFakeInAppPurchasesInDevBuild)
+				{
+					FinishPurchase(true);
+					
+					return;
+				}
 			}
-		}
-#endif
-		if(IsStoreInfoReady())
-		{
-			GetMobileStorePurchaseManager()->OnPurchaseComplete.AddDynamic(this, &UShopItemMobileStorePurchase::ProcessPurchaseComplete);
-			GetMobileStorePurchaseManager()->StartPurchase(GetProductID(), Cast<UMobileStorePurchaseShopItemData>(ShopData)->bIsConsumable);
+	#endif
+			if(IsStoreInfoReady())
+			{
+				GetMobileStorePurchaseManager()->OnPurchaseComplete.AddDynamic(this, &UShopItemMobileStorePurchase::ProcessPurchaseComplete);
+				GetMobileStorePurchaseManager()->StartPurchase(GetProductID(), StoreShopCustomData->bIsConsumable);
+			}
+			else
+			{
+				FinishPurchase(false);
+			}
+	#endif
 		}
 		else
 		{
-			FinishPurchase(false);
+			Super::Buy_Implementation();
 		}
-#endif
-	}
-	else
-	{
-		Super::Buy_Implementation();
 	}
 }
