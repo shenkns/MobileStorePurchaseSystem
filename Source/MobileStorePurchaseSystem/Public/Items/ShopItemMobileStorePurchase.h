@@ -41,7 +41,7 @@ public:
 
 	virtual int GetPrice_Implementation() const override;
 	
-	//virtual FText GetPriceText_Implementation() const override;
+	virtual FText GetPriceText_Implementation() const override;
 
 	//virtual int GetOldPrice_Implementation() const override;
 	

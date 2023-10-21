@@ -92,6 +92,18 @@ int UShopItemMobileStorePurchase::GetPrice_Implementation() const
 	}
 }
 
+FText UShopItemMobileStorePurchase::GetPriceText_Implementation() const
+{
+	if(ShopData && ShopData->GetCustomData<UStoreShopCustomData>())
+	{
+		return bStoreInfoRecieved ? StoreOfferInfo->PriceText : FText();
+	}
+	else
+	{
+		return Super::GetPriceText_Implementation();
+	}
+}
+
 bool UShopItemMobileStorePurchase::CanBeBought_Implementation() const
 {
 	if(GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
