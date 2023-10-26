@@ -39,6 +39,8 @@ public:
 
 	virtual void Finish_Implementation() override;
 
+	virtual void VerifyPurchase_Implementation() override;
+
 	virtual int GetPrice_Implementation() const override;
 	
 	virtual FText GetPriceText_Implementation() const override;
