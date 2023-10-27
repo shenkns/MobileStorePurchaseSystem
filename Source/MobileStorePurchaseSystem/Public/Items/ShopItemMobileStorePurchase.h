@@ -39,7 +39,7 @@ public:
 
 	virtual void Finish_Implementation() override;
 
-	virtual void VerifyPurchase_Implementation() override;
+	virtual void VerifyPurchase_Implementation(const FString& TransactionID) override;
 
 	virtual int GetPrice_Implementation() const override;
 	

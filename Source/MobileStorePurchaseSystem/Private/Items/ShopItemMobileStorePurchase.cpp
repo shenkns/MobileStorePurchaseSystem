@@ -79,7 +79,7 @@ void UShopItemMobileStorePurchase::Finish_Implementation()
 	Super::Finish_Implementation();
 }
 
-void UShopItemMobileStorePurchase::VerifyPurchase_Implementation()
+void UShopItemMobileStorePurchase::VerifyPurchase_Implementation(const FString& TransactionID)
 {
 	FHttpModule& HttpModule = FHttpModule::Get();
 	
@@ -93,6 +93,35 @@ void UShopItemMobileStorePurchase::VerifyPurchase_Implementation()
 
 	const TSharedPtr<FJsonObject> RequestContent = MakeShareable(new FJsonObject);
 	RequestContent->SetStringField(FString("tag"), GetShopData<UShopItemData>()->Tag.ToString());
+
+#if WITH_EDITOR
+	RequestContent->SetBoolField(FString("fakePurchase"), true);
+#else
+#if UE_BUILD_DEVELOPMENT
+	if(const UMobileStorePurchaseSystemSettings* Settings = GetDefault<UMobileStorePurchaseSystemSettings>())
+	{
+		if(Settings->bFakeInAppPurchasesInDevBuild)
+		{
+			if(const UShopSystemSettings* ShopSystemSettings = GetDefault<UShopSystemSettings>())
+			{
+				if(ShopSystemSettings->bEnableBackendPurchaseVerification)
+				{
+					RequestContent->SetBoolField(FString("fakePurchase"), true);
+				}
+				else
+				{
+					RequestContent->SetStringField(FString("purchaseToken"), TransactionID);
+				}
+			}
+		}
+		else
+		{
+			RequestContent->SetStringField(FString("purchaseToken"), TransactionID);
+		}
+	}
+#endif
+	RequestContent->SetStringField(FString("purchaseToken"), TransactionID);
+#endif
 	
 	FString OutputString;
 	const TSharedRef<TJsonWriter<TCHAR>> Writer = TJsonWriterFactory<TCHAR>::Create(&OutputString);
@@ -224,7 +253,7 @@ void UShopItemMobileStorePurchase::ProcessPurchaseComplete(bool Success, FPurcha
 		{
 			if(Settings->bEnableBackendPurchaseVerification)
 			{
-				VerifyPurchase();
+				VerifyPurchase(Reciept.TransactionID);
 				return;
 			}
 		}
@@ -299,14 +328,31 @@ void UShopItemMobileStorePurchase::StartRealBuyProcess()
 			)
 	
 	#if WITH_EDITOR
-			FinishPurchase(true);
+			if(const UShopSystemSettings* Settings = GetDefault<UShopSystemSettings>())
+			{
+				if(Settings->bEnableBackendPurchaseVerification)
+				{
+					VerifyPurchase();
+				}
+				else
+				{
+					FinishPurchase(true);
+				}
+			}
 	#else
 	#if UE_BUILD_DEVELOPMENT
 			if(const UMobileStorePurchaseSystemSettings* Settings = GetDefault<UMobileStorePurchaseSystemSettings>())
 			{
 				if(Settings->bFakeInAppPurchasesInDevBuild)
 				{
-					FinishPurchase(true);
+					if(Settings->bEnableBackendPurchaseVerification)
+					{
+						VerifyPurchase();
+					}
+					else
+					{
+						FinishPurchase(true);
+					}
 					
 					return;
 				}
