@@ -73,16 +73,6 @@ bool UShopItemMobileStorePurchase::Buy_Implementation()
 	return Super::Buy_Implementation();
 }
 
-void UShopItemMobileStorePurchase::Finish_Implementation()
-{
-	if(GetShopData<UShopItemData>() && GetShopData<UShopItemData>()->GetCustomData<UStoreShopCustomData>())
-	{
-		ClosePurchaseWidget();
-	}
-	
-	Super::Finish_Implementation();
-}
-
 void UShopItemMobileStorePurchase::VerifyPurchase_Implementation(const FString& TransactionID)
 {
 	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
@@ -296,23 +286,6 @@ void UShopItemMobileStorePurchase::CheckProduct()
 		);
 	}
 	
-}
-
-void UShopItemMobileStorePurchase::OpenPurchaseWidget()
-{
-	PurchaseWidget = CreateWidget<UPurchaseWidget>(UGameplayStatics::GetPlayerController(this, 0),
-		GetDefault<UMobileStorePurchaseSystemSettings>()->PurchaseWidgetClass
-	);
-	
-	PurchaseWidget->Show();
-}
-
-void UShopItemMobileStorePurchase::ClosePurchaseWidget()
-{
-	if(PurchaseWidget)
-	{
-		PurchaseWidget->Hide();
-	}
 }
 
 void UShopItemMobileStorePurchase::StartRealBuyProcess()

@@ -27,8 +27,5 @@ public:
 	bool bShowDebugMessages = false;
 
 	UPROPERTY(EditDefaultsOnly, Config, Category = "Debug")
-	TSubclassOf<UPurchaseWidget> PurchaseWidgetClass = UPurchaseWidget::StaticClass();
-
-	UPROPERTY(EditDefaultsOnly, Config, Category = "Debug")
 	bool bFakeInAppPurchasesInDevBuild = false;
 };

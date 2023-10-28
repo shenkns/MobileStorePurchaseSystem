@@ -19,9 +19,6 @@ class MOBILESTOREPURCHASESYSTEM_API UShopItemMobileStorePurchase : public UShopI
 	
 protected:
 
-	UPROPERTY(BlueprintReadOnly, Category = "Shop|MobileStorePurchase")
-	UPurchaseWidget* PurchaseWidget;
-
 	TSharedPtr<FOnlineStoreOffer> StoreOfferInfo;
 
 	bool bStoreInfoRecieved;
@@ -36,8 +33,6 @@ public:
 	virtual void Init_Implementation() override;
 
 	virtual bool Buy_Implementation() override;
-
-	virtual void Finish_Implementation() override;
 
 	virtual void VerifyPurchase_Implementation(const FString& TransactionID) override;
 
@@ -74,7 +69,4 @@ private:
 
 	UFUNCTION()
 	void StartRealBuyProcess();
-
-	void OpenPurchaseWidget();
-	void ClosePurchaseWidget();
 };
