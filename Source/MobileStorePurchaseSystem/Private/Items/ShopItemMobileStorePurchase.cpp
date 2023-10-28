@@ -4,7 +4,6 @@
 
 #include "LogSystem.h"
 #include "ManagersSystem.h"
-#include "Blueprint/UserWidget.h"
 #include "Data/StoreShopCustomData.h"
 #include "Data/ShopItemData.h"
 #include "Kismet/GameplayStatics.h"
