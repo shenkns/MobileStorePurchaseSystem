@@ -36,9 +36,7 @@ public class MobileStorePurchaseSystem : ModuleRules
 				"Json",
 				"UMG", 
 				"SaveLoadSystem",
-				"HTTP",
-				"Json",
-				"JsonUtilities"
+				"VaRest"
 			}
 		);
 		
@@ -50,7 +48,8 @@ public class MobileStorePurchaseSystem : ModuleRules
 				"ManagersSystem",
 				"ShopSystem",
 				"SerializationSystem",
-				"OnlineSubsystem"
+				"OnlineSubsystem",
+				"VaRest"
 			}
 		);
 		

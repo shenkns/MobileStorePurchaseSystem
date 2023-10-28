@@ -2,13 +2,11 @@
 
 #include "Items/ShopItemMobileStorePurchase.h"
 
-#include "HttpModule.h"
 #include "LogSystem.h"
 #include "ManagersSystem.h"
 #include "Blueprint/UserWidget.h"
 #include "Data/StoreShopCustomData.h"
 #include "Data/ShopItemData.h"
-#include "Interfaces/IHttpResponse.h"
 #include "Kismet/GameplayStatics.h"
 #include "Managers/ShopManager.h"
 #include "Managers/StatsManager.h"
@@ -16,6 +14,12 @@
 #include "Module/MobileStorePurchaseSystemSettings.h"
 #include "Module/ShopSystemSettings.h"
 #include "Widgets/PurchaseWidget.h"
+
+#include "VaRestSubsystem.h"
+#include "VaRestRequestJSON.h"
+#include "VaRestTypes.h"
+#include "VaRestJsonObject.h"
+#include "VaRestJsonValue.h"
 
 void UShopItemMobileStorePurchase::Init_Implementation()
 {
@@ -81,63 +85,58 @@ void UShopItemMobileStorePurchase::Finish_Implementation()
 
 void UShopItemMobileStorePurchase::VerifyPurchase_Implementation(const FString& TransactionID)
 {
-	FHttpModule& HttpModule = FHttpModule::Get();
+	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+		LogMobileStorePurchaseSystem,
+		"Purchase verification started, item: %s, transaction: %s",
+		*GetShopData<UShopItemData>()->Tag.ToString(),
+		*TransactionID
+	);
 	
-	const TSharedRef<IHttpRequest, ESPMode::ThreadSafe> VerificationRequest = HttpModule.CreateRequest();
-	VerificationRequest->SetURL(UShopSystemSettings::GetPurchaseVerificationUrl());
-	VerificationRequest->SetVerb(FString("POST"));
+	UVaRestSubsystem* VaRest = GetVaRest();
+	if(!VaRest) FinishPurchase(false);
 
-	VerificationRequest->SetHeader(FString("Authorization"),
+	UVaRestRequestJSON* Request = VaRest->ConstructVaRestRequest();
+	if(!Request) FinishPurchase(false);
+
+	Request->SetVerb(EVaRestRequestVerb::POST);
+	Request->SetContentType(EVaRestRequestContentType::json);
+
+	Request->SetHeader(FString("Authorization"),
 		FString::Printf(TEXT("Bearer %s"), *UShopSystemSettings::GetBackendAuthToken())
 	);
 
-	const TSharedPtr<FJsonObject> RequestContent = MakeShareable(new FJsonObject);
-	RequestContent->SetStringField(FString("tag"), GetShopData<UShopItemData>()->Tag.ToString());
-
+	Request->GetRequestObject()->SetStringField(FString("tag"), GetShopData<UShopItemData>()->Tag.ToString());
+	
 #if WITH_EDITOR
-	RequestContent->SetBoolField(FString("fakePurchase"), true);
+	Request->GetRequestObject()->SetBoolField(FString("fakePurchase"), true);
 #else
 #if UE_BUILD_DEVELOPMENT
 	if(const UMobileStorePurchaseSystemSettings* Settings = GetDefault<UMobileStorePurchaseSystemSettings>())
 	{
 		if(Settings->bFakeInAppPurchasesInDevBuild)
 		{
-			if(const UShopSystemSettings* ShopSystemSettings = GetDefault<UShopSystemSettings>())
-			{
-				if(ShopSystemSettings->bEnableBackendPurchaseVerification)
-				{
-					RequestContent->SetBoolField(FString("fakePurchase"), true);
-				}
-				else
-				{
-					RequestContent->SetStringField(FString("purchaseToken"), TransactionID);
-				}
-			}
+			Request->GetRequestObject()->SetBoolField(FString("fakePurchase"), true);
 		}
 		else
 		{
-			RequestContent->SetStringField(FString("purchaseToken"), TransactionID);
+			Request->GetRequestObject()->SetStringField(FString("purchaseToken"), TransactionID);
 		}
 	}
+#else
+	Request->GetRequestObject()->SetStringField(FString("purchaseToken"), TransactionID);
 #endif
-	RequestContent->SetStringField(FString("purchaseToken"), TransactionID);
 #endif
+
+	Request->OnRequestComplete.AddUniqueDynamic(this, &UShopItemMobileStorePurchase::OnPurchaseVerified);
 	
-	FString OutputString;
-	const TSharedRef<TJsonWriter<TCHAR>> Writer = TJsonWriterFactory<TCHAR>::Create(&OutputString);
-	FJsonSerializer::Serialize(RequestContent.ToSharedRef(), Writer);
+	Request->ProcessURL(UShopSystemSettings::GetPurchaseVerificationUrl());
 
-	VerificationRequest->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
-	VerificationRequest->SetContentAsString(OutputString);
-
-	VerificationRequest->OnProcessRequestComplete().BindWeakLambda(this, [this](FHttpRequestPtr Request,
-			FHttpResponsePtr Response,
-			bool bConnectedSuccessfully)
-	{
-		OnPurchaseVerified(Response.Get()->GetResponseCode() == 200);
-	});
-
-	VerificationRequest->ProcessRequest();
+	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
+		LogMobileStorePurchaseSystem,
+		"Purchase verification request sent \n to: %s, \n with content: %s",
+		*UShopSystemSettings::GetPurchaseVerificationUrl(),
+		*Request->GetRequestObject()->EncodeJson()
+	);
 }
 
 int UShopItemMobileStorePurchase::GetPrice_Implementation() const
@@ -345,13 +344,16 @@ void UShopItemMobileStorePurchase::StartRealBuyProcess()
 			{
 				if(Settings->bFakeInAppPurchasesInDevBuild)
 				{
-					if(Settings->bEnableBackendPurchaseVerification)
+					if(const UShopSystemSettings* ShopSystemSettings = GetDefault<UShopSystemSettings>())
 					{
-						VerifyPurchase();
-					}
-					else
-					{
-						FinishPurchase(true);
+						if(ShopSystemSettings->bEnableBackendPurchaseVerification)
+						{
+							VerifyPurchase();
+						}
+						else
+						{
+							FinishPurchase(true);
+						}
 					}
 					
 					return;
