@@ -31,7 +31,7 @@
 	<buildGradleAdditions>
 		<insert>
 			dependencies {
-				def billing_version = "5.0.0"
+				def billing_version = "6.0.1"
 
 				implementation "com.android.billingclient:billing:$billing_version"
 
