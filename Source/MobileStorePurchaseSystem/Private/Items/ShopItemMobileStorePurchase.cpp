@@ -239,7 +239,7 @@ void UShopItemMobileStorePurchase::ProcessPurchaseComplete(bool Success, FPurcha
 	{
 		if(const UShopSystemSettings* Settings = GetDefault<UShopSystemSettings>())
 		{
-			if(Settings->bEnableBackendPurchaseVerification)
+			if(Settings->bEnableBackendPurchaseVerification && !GetShopData<UShopItemData>()->bSkipPurchaseVerification)
 			{
 				VerifyPurchase(Reciept.TransactionID);
 				return;
