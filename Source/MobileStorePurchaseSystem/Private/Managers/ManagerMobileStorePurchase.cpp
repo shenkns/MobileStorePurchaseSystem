@@ -2,7 +2,7 @@
 
 #include "Managers/ManagerMobileStorePurchase.h"
 
-#include "LogSystem.h"
+#include "Log.h"
 #include "ManagersSystem.h"
 #include "Data/ShopItemData.h"
 #include "Data/StoreShopCustomData.h"
@@ -11,11 +11,14 @@
 #include "Module/MobileStorePurchaseSystemModule.h"
 #include "Module/MobileStorePurchaseSystemSettings.h"
 #include "Interfaces/OnlineIdentityInterface.h"
+#include "Log/Details/LocalLogCategory.h"
 #include "PlatformTypePurchases/PlatformTypePurchase.h"
 
 #if PLATFORM_IOS
 #include "PlatformTypePurchases/PlatformTypePurchaseIOS.h"
 #endif
+
+DEFINE_LOG_CATEGORY_LOCAL(LogMobileStorePurchaseSystem);
 
 void UManagerMobileStorePurchase::InitManager()
 {
@@ -57,12 +60,11 @@ void UManagerMobileStorePurchase::InitPlatformInterface()
 			PurchaseInterface->OnProductPurchased.AddUObject(this, &UManagerMobileStorePurchase::ProcessPurchase);
 			PurchaseInterface->OnProductPurchaseError.AddUObject(this, &UManagerMobileStorePurchase::ProcessPurchaseError);
 			
-			DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-				LogMobileStorePurchaseSystem,
-				"%s Platform Purchase Interface Initializaed: %s",
-				*ProxyClass->LoadSynchronous()->GetName(),
-				*PurchaseInterface->GetName()
-			)
+			LOG(Display,
+				"{} Platform Purchase Interface Initializaed: {}",
+				ProxyClass->LoadSynchronous(),
+				PurchaseInterface
+			);
 			
 			return;
 		}
@@ -80,21 +82,14 @@ TSharedPtr<FOnlineStoreOffer> UManagerMobileStorePurchase::GetProduct(FString Pr
 
 void UManagerMobileStorePurchase::RequestAllProducts()
 {
-	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-		LogMobileStorePurchaseSystem,
-		"Trying To Request Store Products"
-	)
+	LOG(Display, "Trying To Request Store Products");
 	
 	const UMobileStorePurchaseSystemSettings* Settings = GetDefault<UMobileStorePurchaseSystemSettings>();
 	if(!Settings) return;
 
 	for (FString ProductID : Settings->StoreProductIDs)
 	{
-		DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-			LogMobileStorePurchaseSystem,
-			"Add pending ProductID to request - %s",
-			*ProductID
-		)
+		LOG(Display, "Add pending ProductID to request - {}", *ProductID);
 
 		PendingProductIdRequests.Add(ProductID);
 	}
@@ -161,11 +156,7 @@ void UManagerMobileStorePurchase::RestorePurchases()
 
 void UManagerMobileStorePurchase::FinalizePurchase(FPurchaseReceiptInfo PurchaseReceiptInfo)
 {
-	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>(),
-		LogMobileStorePurchaseSystem,
-		"Finalize purchase: %s",
-		*PurchaseReceiptInfo.ProductID
-	);
+	LOG(Display, "Finalize purchase: {}", *PurchaseReceiptInfo.ProductID);
 	
 	if(PurchaseInterface)
 	{
@@ -210,12 +201,7 @@ void UManagerMobileStorePurchase::RequestProducts()
 
 void UManagerMobileStorePurchase::ReceiveProductInfo(TSharedPtr<FOnlineStoreOffer> ProductInfo)
 {
-	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-		LogMobileStorePurchaseSystem,
-		"Product info received: %s -- %s",
-		*ProductInfo->OfferId,
-		*ProductInfo->PriceText.ToString()
-	);
+	LOG(Display, "Product info received: {} -- {}", *ProductInfo->OfferId, *ProductInfo->PriceText.ToString());
 	
 	StoreProducts.Add(ProductInfo->OfferId, ProductInfo);
 	
@@ -224,11 +210,7 @@ void UManagerMobileStorePurchase::ReceiveProductInfo(TSharedPtr<FOnlineStoreOffe
 
 void UManagerMobileStorePurchase::ProcessPurchase(FPurchaseInfoRaw PurchaseInfo)
 {
-	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-		LogMobileStorePurchaseSystem,
-		"Process purchase in manager: %s",
-		*PurchaseInfo.ProductID
-	);
+	LOG(Display, "Process purchase in manager: {}", *PurchaseInfo.ProductID);
 	
 	FPurchaseReceiptInfo PurchaseReceiptInfo;
 	PurchaseReceiptInfo.ProductID = PurchaseInfo.ProductID;

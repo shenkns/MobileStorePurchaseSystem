@@ -2,9 +2,11 @@
 
 #include "Proxies/PurchaseProxyInterfaceAndroid.h"
 
-#include "LogSystem.h"
+#include "Log.h"
+#include "Log/Details/LocalLogCategory.h"
 #include "Module/MobileStorePurchaseSystemModule.h"
-#include "Module/MobileStorePurchaseSystemSettings.h"
+
+DEFINE_LOG_CATEGORY_LOCAL(LogMobileStorePurchaseSystem);
 
 void UPurchaseProxyInterfaceAndroid::Purchase(FString ProductID)
 {
@@ -27,24 +29,18 @@ void UPurchaseProxyInterfaceAndroid::RequestProducts(TArray<FString> ProductsID)
 {
 	Super::RequestProducts(ProductsID);
 
-	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-		LogMobileStorePurchaseSystem,
-		"%i Store Products Requested",
-	ProductsID.Num())
+	LOG(Display, "{} Store Products Requested", ProductsID.Num());
 	
 	if(UAndroidBillingHelper* Billing = UAndroidBillingHelper::Get())
 	{
-		DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-			LogMobileStorePurchaseSystem,
-			"Adnroid Billing Helper Products Request"
-		)
+		LOG(Display, "Adnroid Billing Helper Products Request");
 		Billing->OnProductInfoReceive.AddUniqueDynamic(this, &UPurchaseProxyInterfaceAndroid::ReceiveProduct);
 		Billing->RequestProducts(ProductsID);
 
 		return;
 	}
 
-	LOG(LogMobileStorePurchaseSystem, "Adnroid Billing Helper Products Request Failed")
+	LOG(Display, "Adnroid Billing Helper Products Request Failed");
 	OnProductPurchaseError.Broadcast("No Billing");
 }
 
@@ -74,7 +70,7 @@ void UPurchaseProxyInterfaceAndroid::FinalizePurchase(const FPurchaseInfoRaw& Pu
 
 void UPurchaseProxyInterfaceAndroid::ProcessPurchase(FAndroidPurchaseInfo PurchaseInfo)
 {
-	LOG(LogMobileStorePurchaseSystem, "Process purchase: %s", *PurchaseInfo.ProductID)
+	LOG(Display, "Process purchase: {}", *PurchaseInfo.ProductID);
 	
 	FPurchaseInfoRaw Info;
 	Info.ProductID = PurchaseInfo.ProductID;
@@ -92,7 +88,7 @@ void UPurchaseProxyInterfaceAndroid::ProcessPurchase(FAndroidPurchaseInfo Purcha
 
 void UPurchaseProxyInterfaceAndroid::ProcessPurchaseFail(FString PurchaseID, FString Error)
 {
-	LOG(LogMobileStorePurchaseSystem, "Process purchase failed: %s", *Error)
+	LOG(Display, "Process purchase failed: {}", *Error);
 	
 	OnProductPurchaseError.Broadcast(Error);
 }

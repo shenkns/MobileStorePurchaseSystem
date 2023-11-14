@@ -2,31 +2,26 @@
 
 #include "Items/ShopItemMobileStorePurchase.h"
 
-#include "LogSystem.h"
+#include "Log.h"
 #include "ManagersSystem.h"
 #include "Data/StoreShopCustomData.h"
 #include "Data/ShopItemData.h"
-#include "Kismet/GameplayStatics.h"
 #include "Managers/ShopManager.h"
 #include "Managers/StatsManager.h"
 #include "Module/MobileStorePurchaseSystemModule.h"
-#include "Module/MobileStorePurchaseSystemSettings.h"
 #include "Module/ShopSystemSettings.h"
-#include "Widgets/PurchaseWidget.h"
 
 #include "VaRestSubsystem.h"
 #include "VaRestRequestJSON.h"
 #include "VaRestTypes.h"
 #include "VaRestJsonObject.h"
-#include "VaRestJsonValue.h"
+#include "Log/Details/LocalLogCategory.h"
+
+DEFINE_LOG_CATEGORY_LOCAL(LogMobileStorePurchaseSystem);
 
 void UShopItemMobileStorePurchase::Init_Implementation()
 {
-	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-		LogMobileStorePurchaseSystem,
-		"SKU %s: Init",
-		*ShopData->GetName()
-	)
+	LOG(Display, "SKU {}: Init", ShopData->Tag);
 
 	const UManagersSystem* ManagersSystem = GetManagersSystem();
 	if(!ManagersSystem) return;
@@ -42,12 +37,7 @@ void UShopItemMobileStorePurchase::Init_Implementation()
 		{
 			ManagerMobileStorePurchase->OnProductsReceived.AddUObject(this, &UShopItemMobileStorePurchase::CheckProduct);
 			
-			DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-				LogMobileStorePurchaseSystem,
-				"Waiting %s Store Product For %s Shop Item",
-				*GetProductID(),
-				*GetName()
-			)
+			LOG(Display, "Waiting {} Store Product For {} Shop Item", *GetProductID(), this);
 		}
 	}
 	else
@@ -74,12 +64,7 @@ bool UShopItemMobileStorePurchase::Buy_Implementation()
 
 void UShopItemMobileStorePurchase::VerifyPurchase_Implementation(const FString& TransactionID)
 {
-	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-		LogMobileStorePurchaseSystem,
-		"Purchase verification started, item: %s, transaction: %s",
-		*GetShopData<UShopItemData>()->Tag.ToString(),
-		*TransactionID
-	);
+	LOG(Display, "Purchase verification started, item: {}, transaction: {}", GetShopData<UShopItemData>()->Tag, *TransactionID);
 	
 	UVaRestSubsystem* VaRest = GetVaRest();
 	if(!VaRest) FinishPurchase(false);
@@ -120,12 +105,7 @@ void UShopItemMobileStorePurchase::VerifyPurchase_Implementation(const FString& 
 	
 	Request->ProcessURL(UShopSystemSettings::GetPurchaseVerificationUrl());
 
-	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-		LogMobileStorePurchaseSystem,
-		"Purchase verification request sent \n to: %s, \n with content: %s",
-		*UShopSystemSettings::GetPurchaseVerificationUrl(),
-		*Request->GetRequestObject()->EncodeJson()
-	);
+	LOG(Display, "Purchase verification request sent \n to: {}, \n with content: {}", *UShopSystemSettings::GetPurchaseVerificationUrl(), *Request->GetRequestObject()->EncodeJson());
 }
 
 int UShopItemMobileStorePurchase::GetPrice_Implementation() const
@@ -213,11 +193,7 @@ FString UShopItemMobileStorePurchase::GetProductID_Implementation() const
 
 void UShopItemMobileStorePurchase::ProcessPurchaseComplete(bool Success, FPurchaseReceiptInfo Reciept)
 {
-	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-		LogMobileStorePurchaseSystem,
-		"Purchase complete: %s",
-		*Reciept.ProductID
-	);
+	LOG(Display, "Purchase complete: {}", *Reciept.ProductID);
 
 	if(!GetMobileStorePurchaseManager()) return;
 	
@@ -229,11 +205,7 @@ void UShopItemMobileStorePurchase::ProcessPurchaseComplete(bool Success, FPurcha
 		GetMobileStorePurchaseManager()->FinalizePurchase(Reciept);
 	}
 	
-	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-		LogMobileStorePurchaseSystem,
-		"Finish SKU: %s",
-		*ShopData->Tag.ToString()
-	);
+	LOG(Display, "Finish SKU: {}", ShopData->Tag);
 
 	if(Success)
 	{
@@ -268,21 +240,11 @@ void UShopItemMobileStorePurchase::CheckProduct()
 	{
 		bStoreInfoRecieved = true;
 
-		DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-			LogMobileStorePurchaseSystem,
-			"SKU ""%s"" received store info: %s -- %s",
-			*ShopData->Tag.ToString(),
-			*StoreOfferInfo->Title.ToString(),
-			*StoreOfferInfo->PriceText.ToString()
-		);
+		LOG(Display, "SKU ""{}"" received store info: {} -- {}", ShopData->Tag, StoreOfferInfo->Title, StoreOfferInfo->PriceText);
 	}
 	else
 	{
-		DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-			LogMobileStorePurchaseSystem,
-			"SKU ""%s"" not valid",
-			*ShopData->Tag.ToString()
-		);
+		LOG(Display, "SKU ""{}"" not valid", ShopData->Tag);
 	}
 	
 }
@@ -293,10 +255,7 @@ void UShopItemMobileStorePurchase::StartRealBuyProcess()
 	{
 		if(const UStoreShopCustomData* StoreShopCustomData = StoreShopData->GetCustomData<UStoreShopCustomData>())
 		{
-			DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-				LogMobileStorePurchaseSystem, "SKU %s: Buy",
-				*ShopData->GetName()
-			)
+			LOG(Display, "SKU {}: Buy", ShopData->Tag);
 	
 	#if WITH_EDITOR
 			if(const UShopSystemSettings* Settings = GetDefault<UShopSystemSettings>())
