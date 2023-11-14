@@ -2,7 +2,11 @@
 
 #include "Proxies/AndroidBillingHelper.h"
 
+#include "Log/Details/LocalLogCategory.h"
 #include "Module/MobileStorePurchaseSystemModule.h"
+#include "Log.h"
+
+DEFINE_LOG_CATEGORY_LOCAL(LogMobileStorePurchaseSystem);
 
 #if PLATFORM_ANDROID
 
@@ -23,10 +27,7 @@ UAndroidBillingHelper* UAndroidBillingHelper::Get()
 void UAndroidBillingHelper::RequestProducts(TArray<FString> ProductIDs)
 {
 #if PLATFORM_ANDROID
-	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-		LogMobileStorePurchaseSystem,
-		"UE Billing Request Products"
-	)
+	LOG(Display, "UE Billing Request Products");
 	
 	JNIEnv* Env = FAndroidApplication::GetJavaEnv();
 	if (!Env) return;
@@ -55,10 +56,7 @@ void UAndroidBillingHelper::RequestProducts(TArray<FString> ProductIDs)
 void UAndroidBillingHelper::Purchase(FString ProductID)
 {
 #if PLATFORM_ANDROID
-	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-		 LogMobileStorePurchaseSystem,
-		 "UE Billing Purchase Start"
-	)
+	LOG(Display, "UE Billing Purchase Start");
 	
 	JNIEnv* Env = FAndroidApplication::GetJavaEnv();
 	if (!Env) return;
@@ -81,10 +79,7 @@ void UAndroidBillingHelper::Purchase(FString ProductID)
 void UAndroidBillingHelper::FinalizePurchase(FAndroidPurchaseInfo PurchaseInfo, bool Consume)
 {
 #if PLATFORM_ANDROID
-	DEBUG_MESSAGE(GetDefault<UMobileStorePurchaseSystemSettings>()->bShowDebugMessages,
-		 LogMobileStorePurchaseSystem,
-		 "UE Billing Purchase Start"
-	)
+	LOG(Display, "UE Billing Purchase Start");
 	
 	JNIEnv* Env = FAndroidApplication::GetJavaEnv();
 	if (!Env) return;
@@ -108,17 +103,17 @@ void UAndroidBillingHelper::FinalizePurchase(FAndroidPurchaseInfo PurchaseInfo, 
 
 JNI_METHOD void Java_com_billing_unreal_UnrealBillingAndroid_onProductsPurchaseSuccessful(JNIEnv *env, jobject obj, jstring purchaseJSON, jstring signature)
 {
-	LOG_STATIC(LogMobileStorePurchaseSystem, "UE Billing Product Purchased")
+	LOG(Display, "UE Billing Product Purchased");
 	
 	const FString JSONString = FJavaHelper::FStringFromParam(env, purchaseJSON);
 
-	LOG_STATIC(LogMobileStorePurchaseSystem, "Product JSON: %s", *JSONString)
+	LOG(Display, "Product JSON: {}", *JSONString);
 
 	// Purchase JSON example:
 	//{ 
 	//	"orderId":"GPA.3386-2124-6888-54771",
-	//	"packageName":"marble.strike.battle.royale",
-	//	"productId":"currency_crystals_1",
+	//	"packageName":"com.YourCompany.ProjectName",
+	//	"productId":"bundle_1",
 	//	"purchaseTime":1665439535789,
 	//	"purchaseState":0,
 	//	"purchaseToken":"okcconnmngpeffhfokpmpbie.AO-J1OysGrijDGzV6sipVFO-3Nf5WyXkpaFa7XPpMcVEOCzSXFJd6AamXcVDlGhPHsWGcGBD7xUrHcGGWAzrdQsVsz6kJwX_gH1FpAuNA1aY7mquS6m7pXs",
@@ -171,11 +166,11 @@ JNI_METHOD void Java_com_billing_unreal_UnrealBillingAndroid_onProductsQuery(JNI
 		
 	int ProductsNum = env->GetArrayLength(productsDataJSON);
 
-	LOG_STATIC(LogMobileStorePurchaseSystem, "Recieved Products")
+	LOG(Display, "Recieved Products");
 		
 	if(ProductsNum <= 0) return;
 
-	LOG_STATIC(LogMobileStorePurchaseSystem, "Products num: %i", ProductsNum)
+	LOG(Display, "Products num: {}", ProductsNum);
 
 	TArray<FAndroidProductInfo> ProductsInfo; 
 		
@@ -185,7 +180,7 @@ JNI_METHOD void Java_com_billing_unreal_UnrealBillingAndroid_onProductsQuery(JNI
 
 		const FString JSONString = FJavaHelper::FStringFromParam(env, objKey);
 
-		LOG_STATIC(LogMobileStorePurchaseSystem, "Product JSON: %s", *JSONString)
+		LOG(Display, "Product JSON: {}", *JSONString);
 
 		TSharedPtr<FJsonObject> MyJson = MakeShareable(new FJsonObject);
 		TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JSONString);
@@ -202,12 +197,12 @@ JNI_METHOD void Java_com_billing_unreal_UnrealBillingAndroid_onProductsQuery(JNI
 			ProductInfo.FormattedPrice = MyJson->GetStringField("FormattedPrice");
 			ProductInfo.MicrosPrice = MyJson->GetIntegerField("Price");
 
-			LOG_STATIC(LogMobileStorePurchaseSystem, "Product info deserialized")
+			LOG(Display, "Product info deserialized");
 
 			ProductsInfo.Add(ProductInfo);
 		}
 
-		LOG_STATIC(LogMobileStorePurchaseSystem, "Send Products To Unreal")
+		LOG(Display, "Send Products To Unreal");
 		
 		AsyncTask(ENamedThreads::GameThread, [ProductsInfo]()
 		{
