@@ -16,6 +16,7 @@
 #include "VaRestTypes.h"
 #include "VaRestJsonObject.h"
 #include "Log/Details/LocalLogCategory.h"
+#include "Module/MobileStorePurchaseSystemSettings.h"
 
 DEFINE_LOG_CATEGORY_LOCAL(LogMobileStorePurchaseSystem);
 
